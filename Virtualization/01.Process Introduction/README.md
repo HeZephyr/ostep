@@ -6,7 +6,7 @@
   * `BLOCKED`：进程正在等待I/O（例如，它向磁盘发送请求）
   * `DONE`：进程已经执行完成
 
-要运行该程序获取器选项，可执行以下操作
+要运行该程序获取其选项，可执行以下操作
 `./process-run.py -h`
 或者
 `python process-run.py -h`

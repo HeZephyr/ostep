@@ -4,7 +4,7 @@
 	MLFQ有许多不同的队列，每个队列分配了不同的优先级。在任何给定时间，准备运行的作业都位于单个队列上。 MLFQ 使用优先级来决定在给定时间应运行哪个作业：选择运行具有较高优先级的作业（即较高队列上的作业）。当然，一个队列上可能有多个作业，即具有相同的优先级，这种情况则对这些工作使用RR调度。则MLFQ基本规则如下：
 
 	* $\text{Rule}\space1:\text{If Priority(A)>Priority(B),A runs (B doesn't).}$
-	* $\text{Rule}\space1:\text{If Priority(A)=Priority(B),A\&B run in RR.}$
+	* $\text{Rule}\space1:\text{If Priority(A)=Priority(B),A and B run in RR.}$
 
 * MLFQ例子
 
@@ -107,7 +107,7 @@
 	我们已经描述了多级反馈队列（MLFQ）的调度方法。希望你现在能明白它为什么叫这个名字：它有多级队列，并使用反馈来确定给定作业的优先级。历史是它的指南：关注作业在一段时间内的表现，并相应地处理它们。在本章中，MLFQ 规则的精炼集在此重现，供大家欣赏：
 
 	* $\text{Rule 1: If Priority(A) > Priority(B), A runs (B doesn’t).}$
-	* $\text{Rule 2: If Priority(A) = Priority(B), A \& B run in round-robin fash-
+	* $\text{Rule 2: If Priority(A) = Priority(B), A and B run in round-robin fash-
 		ion using the time slice (quantum length) of the given queue.}$
 	* $\text{Rule 3: When a job enters the system, it is placed at the highest
 		priority (the topmost queue).}$

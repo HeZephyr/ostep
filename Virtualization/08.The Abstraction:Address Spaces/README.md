@@ -121,3 +121,335 @@ VM的目标如下：
 
 	隔离进程（和操作系统本身）[但允许选择性“通信”]
 
+# Homework
+
+1. 你应该查看的第一个 Linux 工具是非常简单的 free 工具。首先，键入 man free 并阅读整个手册页面。~~RTFM~~
+
+	```
+	FREE(1)                       User Commands                      FREE(1)
+	NAME
+	       free - Display amount of free and used memory in the system
+	SYNOPSIS
+	       free [options]
+	DESCRIPTION
+	       free displays the total amount of free and used physical and swap
+	       memory in the system, as well as the buffers and caches used by
+	       the kernel. The information is gathered by parsing /proc/meminfo.
+	       The displayed columns are:
+	
+	       total  Total usable memory (MemTotal and SwapTotal in
+	              /proc/meminfo). This includes the physical and swap memory
+	              minus a few reserved bits and kernel binary code.
+	
+	       used   Used or unavailable memory (calculated as total -
+	              available)
+	
+	       free   Unused memory (MemFree and SwapFree in /proc/meminfo)
+	
+	       shared Memory used (mostly) by tmpfs (Shmem in /proc/meminfo)
+	
+	       buffers
+	              Memory used by kernel buffers (Buffers in /proc/meminfo)
+	
+	       cache  Memory used by the page cache and slabs (Cached and
+	              SReclaimable in /proc/meminfo)
+	
+	       buff/cache
+	              Sum of buffers and cache
+	
+	       available
+	              Estimation of how much memory is available for starting
+	              new applications, without swapping. Unlike the data
+	              provided by the cache or free fields, this field takes
+	              into account page cache and also that not all reclaimable
+	              memory slabs will be reclaimed due to items being in use
+	              (MemAvailable in /proc/meminfo, available on kernels 3.14,
+	              emulated on kernels 2.6.27+, otherwise the same as free)
+	OPTIONS
+	       -b, --bytes
+	              Display the amount of memory in bytes.
+	
+	       -k, --kibi
+	              Display the amount of memory in kibibytes.  This is the
+	              default.
+	
+	       -m, --mebi
+	              Display the amount of memory in mebibytes.
+	
+	       -g, --gibi
+	              Display the amount of memory in gibibytes.
+	
+	       --tebi Display the amount of memory in tebibytes.
+	
+	       --pebi Display the amount of memory in pebibytes.
+	
+	       --kilo Display the amount of memory in kilobytes. Implies --si.
+	
+	       --mega Display the amount of memory in megabytes. Implies --si.
+	
+	       --giga Display the amount of memory in gigabytes. Implies --si.
+	
+	       --tera Display the amount of memory in terabytes. Implies --si.
+	
+	       --peta Display the amount of memory in petabytes. Implies --si.
+	
+	       -h, --human
+	              Show all output fields automatically scaled to shortest
+	              three digit unit and display the units of print out.
+	              Following units are used.
+	
+	                B = bytes
+	                Ki = kibibyte
+	                Mi = mebibyte
+	                Gi = gibibyte
+	                Ti = tebibyte
+	                Pi = pebibyte
+	
+	              If unit is missing, and you have exbibyte of RAM or swap,
+	              the number is in tebibytes and columns might not be
+	              aligned with header.
+	
+	       -w, --wide
+	              Switch to the wide mode. The wide mode produces lines
+	              longer than 80 characters. In this mode buffers and cache
+	              are reported in two separate columns.
+	
+	       -c, --count count
+	              Display the result count times.  Requires the -s option.
+	
+	       -l, --lohi
+	              Show detailed low and high memory statistics.
+	
+	       -s, --seconds delay
+	              Continuously display the result delay  seconds apart.  You
+	              may actually specify any floating point number for delay
+	              using either . or , for decimal point.  usleep(3) is used
+	              for microsecond resolution delay times.
+	
+	       --si   Use kilo, mega, giga etc (power of 1000) instead of kibi,
+	              mebi, gibi (power of 1024).
+	
+	       -t, --total
+	              Display a line showing the column totals.
+	
+	       --help Print help.
+	
+	       -V, --version
+	              Display version information.
+	FILES
+	       /proc/meminfo
+	              memory information
+	```
+
+2. 现在，自由运行，或许可以使用一些可能有用的参数（例如，-m，以兆字节为单位显示内存总量）。系统中有多少内存？有多少是空闲的？这些数字符合你的直觉吗？
+
+	```shell
+	> free -m
+	               total        used        free      shared  buff/cache   available
+	Mem:            1690         346         233           2        1110        1156
+	Swap:
+	```
+
+	```shell
+	> free -m -s 1 -c 3
+	               total        used        free      shared  buff/cache   available
+	Mem:            1690         344         236           2        1110        1159
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:            1690         344         236           2        1110        1159
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:            1690         344         236           2        1110        1159
+	Swap:              0           0           0
+	```
+
+3. 接下来，创建一个使用一定内存量的小程序，称为 memory-user.c。该程序应采用一个命令行参数：它将使用的内存兆字节数。运行时，它应该分配一个数组，并不断地流过该数组，接触每个条目。程序应该无限期地执行此操作，或者可能在命令行中指定的一定时间内执行此操作。
+
+	```c
+	#include <stdio.h>
+	#include <stdlib.h>
+	#include <time.h>
+	#include <unistd.h>
+	
+	int main(int argc, char *argv[]) {
+	    if (argc != 3) {
+	        fprintf(stderr, "Usage: %s <memory> <time>\n", argv[0]);
+	        return 1;
+	    }
+	
+	    printf("Current Process ID = %d\n", getpid());
+	
+	    long long int size = ((long long int)atoi(argv[1])) * 1024 * 1024;
+	    int* buffer = (int*)malloc(size);
+	
+	    // Run the while loop for given amount of time.
+	    time_t endwait, seconds, start;
+	    seconds = atoi(argv[2]);
+	    start = time(NULL);
+	    // print format start time
+	    printf("Start Time: %s", ctime(&start));
+	    endwait = start + seconds;
+	
+	    while (start < endwait) {
+	        for (long long int i = 0; i < size / sizeof(int); i++) {
+	            buffer[i] = i;
+	        }
+	        start = time(NULL);
+	    }
+	    printf("End Time: %s", ctime(&start));
+	    free(buffer);
+	    return 0;
+	}
+	```
+
+	编译该程序后，只需使用两个参数运行即可。第一个参数是要保留的 MB 数，第二个参数是运行程序的最小秒数。
+
+4. 现在，在运行内存用户程序的同时，也（在不同的终端窗口，但在同一台机器上）运行`free`工具。当你的程序运行时，内存使用总量有什么变化？杀死内存用户程序时又如何？这些数字符合你的预期吗？针对不同的内存使用量进行尝试。如果内存使用量非常大，会发生什么情况？
+
+	```shell
+	> free -k -s 1 -c 10
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172      376744     1092732        2640      261696     1169784
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172      376996     1092480        2640      261696     1169540
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172      376868     1092480        2640      261824     1169668
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172      653312      816036        2640      261824      893224
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172     1203960      265164        2640      262048      342568
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172     1399788       75604        2640      255780      146792
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172     1399788       75604        2640      255780      146792
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172     1399724       75604        2640      255844      146800
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172     1399724       75604        2640      255844      146800
+	Swap:              0           0           0
+	
+	               total        used        free      shared  buff/cache   available
+	Mem:         1731172      374780     1100388        2640      256004     1171832
+	Swap:              0           0           0
+	```
+
+	如`free`输出，
+
+	1. **内存使用增加**：因为程序动态分配了大量的内存，因此系统的内存使用量会增加。这些内存可能会被标记为“已分配”，但实际上并没有被物理分配，而是在需要时才会真正分配。
+	2. **缓慢增长**：内存使用量可能会以缓慢的速度增长，因为你的程序在循环中不断对分配的内存进行写操作。这种增长的速度取决于循环的迭代次数以及每次迭代中对内存的写入量。
+
+	当你杀死内存用户程序时或者程序结束后，系统的内存使用总量会减少。杀死程序和主动释放内存都会导致系统回收程序所分配的内存，并将其标记为可用内存。系统会尽可能快地释放这些内存，并将其用于其他进程或系统操作。
+
+	如果使用大量内存，会出现段错误：
+
+	```shell
+	❯ ./a.out 1000000000000 6
+	Current Process ID = 65564
+	Start Time: Sat Mar 30 13:51:31 2024
+	[1]    65564 segmentation fault  ./a.out 1000000000000 6
+	```
+
+	但如果不遍历数组，即只分配不使用，正如上面所述，只有需要时才会真正分配。这个时候就不会发生段错误。
+
+5. 让我们再试试 pmap 工具。花点时间，详细阅读 pmap 手册页面
+
+	```shell
+	NAME
+	       pmap - report memory map of a process
+	SYNOPSIS
+	       pmap [options] pid [...]
+	DESCRIPTION
+	       The pmap command reports the memory map of a process or processes.
+	OPTIONS
+	       -x, --extended
+	              Show the extended format.
+	       -d, --device
+	              Show the device format.
+	       -q, --quiet
+	              Do not display some header or footer lines.
+	       -A, --range low,high
+	              Limit results to the given range to low and high address range.  Notice that the low and high arguments are single string separated with comma.
+	       -X     Show even more details than the -x option. WARNING: format changes according to /proc/PID/smaps
+	       -XX    Show everything the kernel provides
+	       -p, --show-path
+	              Show full path to files in the mapping column
+	       -c, --read-rc
+	              Read the default configuration
+	       -C, --read-rc-from file
+	              Read the configuration from file
+	       -n, --create-rc
+	              Create new default configuration
+	       -N, --create-rc-to file
+	              Create new configuration to file
+	       -h, --help
+	              Display help text and exit.
+	       -V, --version
+	              Display version information and exit.
+	EXIT STATUS
+	              0      Success.
+	              1      Failure.
+	              42     Did not find all processes asked for.
+	```
+
+6. 要使用 pmap，您必须知道您感兴趣的进程的PID。因此，首先运行 ps auxw 查看所有进程的列表；然后，选择一个有趣的，例如浏览器。在这种情况下，您还可以使用`memory-user.c`程序（实际上，您甚至可以让该程序调用 getpid() 并打印出其 PID 以方便您使用）。
+
+	```
+	> ps auxw | grep 1289471
+	zfhe     1289471 93.1 60.6 1051356 1050244 pts/5 R+   13:32   0:14 ./a.out 1 100
+	> pmap 1289471
+	1289471:   ./a.out 1 100
+	000055ce030a9000      4K r---- a.out
+	000055ce030aa000      4K r-x-- a.out
+	000055ce030ab000      4K r---- a.out
+	000055ce030ac000      4K r---- a.out
+	000055ce030ad000      4K rw--- a.out
+	000055ce0502b000    132K rw---   [ anon ]
+	00007f4e75d4f000 1048592K rw---   [ anon ]
+	00007f4eb5d53000    160K r---- libc.so.6
+	00007f4eb5d7b000   1620K r-x-- libc.so.6
+	00007f4eb5f10000    352K r---- libc.so.6
+	00007f4eb5f68000      4K ----- libc.so.6
+	00007f4eb5f69000     16K r---- libc.so.6
+	00007f4eb5f6d000      8K rw--- libc.so.6
+	00007f4eb5f6f000     52K rw---   [ anon ]
+	00007f4eb5f87000      8K rw---   [ anon ]
+	00007f4eb5f89000      8K r---- ld-linux-x86-64.so.2
+	00007f4eb5f8b000    168K r-x-- ld-linux-x86-64.so.2
+	00007f4eb5fb5000     44K r---- ld-linux-x86-64.so.2
+	00007f4eb5fc1000      8K r---- ld-linux-x86-64.so.2
+	00007f4eb5fc3000      8K rw--- ld-linux-x86-64.so.2
+	00007ffe9e81a000    132K rw---   [ stack ]
+	00007ffe9e855000     16K r----   [ anon ]
+	00007ffe9e859000      8K r-x--   [ anon ]
+	ffffffffff600000      4K --x--   [ anon ]
+	 total          1051360K
+	```
+
+7. 现在在其中一些进程上运行 pmap，使用各种标志（如 -X）来显示有关该进程的许多详细信息。你看到了什么？与我们简单的代码/堆栈/堆概念相反，有多少个不同的实体构成了现代地址空间？
+
+	除了栈和堆之外，我们还观察到 `Anonymous memory` ：与文件系统中的任何命名对象或文件无关的内存。您还可能会在输出中观察到 `vDSO` 和 `vsyscall` ，具体取决于您所使用的程序和特定系统。它们都是加速系统调用的方法。您可以在[此处](https://stackoverflow.com/questions/19938324/what-are-vdso-and-vsyscall)阅读有关这些内容的更多信息。
+
+8. 最后，让我们在您的 `memory-user` 程序上运行 pmap，并使用不同数量的已用内存。你在这里看到什么？ pmap 的输出符合您的期望吗？
+
+	在执行 `memory-user` 时，当我们增加堆分配时，在 `pmap` 的输出中可以看到同样的情况。
+
+
+

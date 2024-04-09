@@ -20,6 +20,10 @@
 #define Pthread_cond_signal(cond)                        assert(pthread_cond_signal(cond) == 0);
 #define Pthread_cond_wait(cond, mutex)                   assert(pthread_cond_wait(cond, mutex) == 0);
 
+#define Pthread_mutex_destroy(m) assert(pthread_mutex_destroy(m) == 0)
+#define Pthread_setaffinity_np(thread, cpusetsize, cpuset)                     \
+  assert(pthread_setaffinity_np(thread, cpusetsize, cpuset) == 0)
+#define Pthread_cancel(thread) assert(pthread_cancel(thread) == 0)
 #define Mutex_init(m)                                    assert(pthread_mutex_init(m, NULL) == 0);
 #define Mutex_lock(m)                                    assert(pthread_mutex_lock(m) == 0);
 #define Mutex_unlock(m)                                  assert(pthread_mutex_unlock(m) == 0);

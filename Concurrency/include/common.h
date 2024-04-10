@@ -4,14 +4,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 #include <assert.h>
-#include <errno.h>
-
-#define handle_error_en(en, msg)                                               \
-  do {                                                                         \
-    errno = en;                                                                \
-    perror(msg);                                                               \
-    exit(EXIT_FAILURE);                                                        \
-  } while (0)
 
 double GetTime() {
     struct timeval t;

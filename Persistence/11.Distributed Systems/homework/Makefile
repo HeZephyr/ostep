@@ -1,14 +1,20 @@
-CC = g++
-CFLAGS = -Wall -Wextra -std=c++11
-LDFLAGS =
+CC     := gcc
+CFLAGS := -Wall -Werror UDP-lib.h
 
-server: server.cpp
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+SRCS   := client.c \
+	server.c 
 
-client: client.cpp
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $<
+OBJS   := ${SRCS:c=o}
+PROGS  := ${SRCS:.c=}
 
-make all: server client
+.PHONY: all
+all: ${PROGS}
+
+${PROGS} : % : %.o Makefile
+	${CC} $< -o $@ udp.c
 
 clean:
-	rm -f server client
+	rm -f ${PROGS} ${OBJS}
+
+%.o: %.c Makefile
+	${CC} ${CFLAGS} -c $<
